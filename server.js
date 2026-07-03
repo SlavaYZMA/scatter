@@ -36,16 +36,20 @@ cron.schedule('0 * * * *', () => {
   console.log('[cron] все объекты удалены', new Date().toISOString());
 });
 
-// ─── ПЕРЕВОД (MyMemory — бесплатно, без ключа) ───────────────────────────────
+// ─── ПЕРЕВОД (LibreTranslate) ─────────────────────────────────────────────────
 async function translate(text, targetLang) {
   try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=autodetect|${targetLang}`;
-    const res = await fetch(url);
+    const res = await fetch(`${LIBRETRANSLATE_URL}/translate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: text, source: 'auto', target: targetLang, format: 'text' })
+    });
     if (!res.ok) return null;
     const data = await res.json();
-    if (data.responseStatus === 200) return data.responseData.translatedText;
-    return null;
-  } catch { return null; }
+    return data.translatedText || null;
+  } catch {
+    return null; // LibreTranslate не запущен — отдаём оригинал
+  }
 }
 
 // ─── API: проверка кода ───────────────────────────────────────────────────────
