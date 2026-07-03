@@ -31,11 +31,20 @@
   }
   #auth input::placeholder { color: #ddd; letter-spacing: 0.2em; }
 
-  /* ── CANVAS ── */
+  /* ── CANVAS — скроллится ── */
   #canvas {
-    position: fixed; top: 0; left: 0; right: 0;
-    bottom: 80px; /* space for toolbar */
-    overflow: hidden;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    bottom: 80px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* внутренний слой — большой чтобы было куда скроллить */
+  #canvas-inner {
+    position: relative;
+    width: 100%;
+    min-height: 100%;
   }
 
   /* ── OBJECTS ── */
@@ -49,12 +58,20 @@
     from { opacity: 0; transform: scale(0.92); }
     to   { opacity: 1; transform: scale(1); }
   }
-  .obj-text { max-width: min(320px, 80vw); word-break: break-word; white-space: pre-wrap; }
+  .obj-text {
+    max-width: min(320px, 80vw);
+    word-break: break-word; white-space: pre-wrap;
+  }
   .obj-image img {
-    display: block; max-width: min(260px, 75vw);
+    display: block;
+    max-width: min(260px, 75vw);
     max-height: 200px; object-fit: contain;
   }
-  .obj-audio audio { display: block; width: min(260px, 80vw); height: 36px; }
+  .obj-audio audio {
+    display: block;
+    width: min(260px, 80vw);
+    height: 36px;
+  }
 
   /* ── TOOLBAR ── */
   #toolbar {
@@ -68,61 +85,52 @@
   }
 
   #toolbar textarea {
-    flex: 1;
-    height: 48px;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
+    flex: 1; height: 48px;
+    border: 1px solid #e0e0e0; border-radius: 4px;
     padding: 10px 12px;
     font-family: inherit; font-size: 0.82rem; line-height: 1.4;
     color: #111; background: #fafafa;
-    resize: none; outline: none;
-    caret-color: #999;
+    resize: none; outline: none; caret-color: #999;
     transition: border-color 0.2s;
   }
   #toolbar textarea:focus { border-color: #ccc; background: #fff; }
   #toolbar textarea::placeholder { color: #ccc; }
 
-  /* attach button */
   #attach-btn {
     width: 48px; height: 48px;
     border: 1px solid #e0e0e0; border-radius: 4px;
     background: #fafafa;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; flex-shrink: 0;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background 0.15s;
     -webkit-tap-highlight-color: transparent;
   }
-  #attach-btn:active { background: #f0f0f0; border-color: #ccc; }
+  #attach-btn:active { background: #f0f0f0; }
   #attach-btn svg { color: #bbb; }
 
-  /* send button */
   #send-btn {
     width: 48px; height: 48px;
     border: none; border-radius: 4px;
     background: #111;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; flex-shrink: 0;
-    transition: background 0.15s;
     -webkit-tap-highlight-color: transparent;
   }
   #send-btn:active { background: #333; }
   #send-btn svg { color: #fff; }
 
-  /* hidden file input */
   #file-input { display: none; }
 
-  /* char counter */
   #char-count {
     position: fixed; bottom: 88px; right: 16px;
     font-size: 0.6rem; color: #ccc;
     font-family: inherit; z-index: 501;
-    transition: opacity 0.2s;
-    opacity: 0;
+    opacity: 0; transition: opacity 0.2s;
   }
   #char-count.visible { opacity: 1; }
   #char-count.warn { color: #e88; }
 
-  /* ── DROP OVERLAY ── */
+  /* ── DROP ── */
   #drop-overlay {
     position: fixed; inset: 0;
     background: rgba(255,255,255,0.93);
@@ -137,27 +145,24 @@
   #toast {
     position: fixed; bottom: 90px; left: 50%;
     transform: translateX(-50%);
-    font-size: 0.7rem; color: #999;
-    letter-spacing: 0.08em; z-index: 900;
-    background: #fff; padding: 6px 12px;
-    border: 1px solid #eee; border-radius: 3px;
-    opacity: 0; transition: opacity 0.3s;
-    white-space: nowrap;
+    font-size: 0.7rem; color: #999; letter-spacing: 0.08em;
+    z-index: 900; background: #fff;
+    padding: 6px 12px; border: 1px solid #eee; border-radius: 3px;
+    opacity: 0; transition: opacity 0.3s; white-space: nowrap;
   }
   #toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
-<!-- AUTH -->
 <div id="auth">
   <input id="auth-input" type="password" placeholder="· · · · ·" autocomplete="off" spellcheck="false">
 </div>
 
-<!-- CANVAS -->
-<div id="canvas"></div>
+<div id="canvas">
+  <div id="canvas-inner"></div>
+</div>
 
-<!-- TOOLBAR -->
 <div id="toolbar">
   <button id="attach-btn" title="прикрепить файл">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -184,7 +189,8 @@ const rendered = new Set();
 
 const authEl      = document.getElementById('auth');
 const authInput   = document.getElementById('auth-input');
-const canvas      = document.getElementById('canvas');
+const canvasEl    = document.getElementById('canvas');
+const canvasInner = document.getElementById('canvas-inner');
 const textInput   = document.getElementById('text-input');
 const sendBtn     = document.getElementById('send-btn');
 const attachBtn   = document.getElementById('attach-btn');
@@ -193,13 +199,28 @@ const charCount   = document.getElementById('char-count');
 const dropOverlay = document.getElementById('drop-overlay');
 const toast       = document.getElementById('toast');
 
+// размеры видимой области (без тулбара)
+function vw() { return window.innerWidth; }
+function vh() { return window.innerHeight - 80; }
+
+// расширяем canvas-inner если объект выходит за границы
+function expandCanvas(x, y, w, h) {
+  const needed = Math.max(
+    parseInt(canvasInner.style.height) || vh(),
+    y + h + 40
+  );
+  canvasInner.style.height = needed + 'px';
+  canvasInner.style.minWidth = Math.max(
+    parseInt(canvasInner.style.minWidth) || vw(),
+    x + w + 40
+  ) + 'px';
+}
+
 // ── AUTH ──────────────────────────────────────────────────────────────────────
 authInput.focus();
 authInput.addEventListener('keydown', async e => {
-  if (e.key !== 'Enter') return;
-  await tryAuth(authInput.value.trim());
+  if (e.key === 'Enter') await tryAuth(authInput.value.trim());
 });
-// mobile: also on input blur after typing
 authInput.addEventListener('blur', async () => {
   if (authInput.value.trim()) await tryAuth(authInput.value.trim());
 });
@@ -210,6 +231,7 @@ async function tryAuth(code) {
     authed = true;
     authEl.classList.add('hidden');
     setTimeout(() => authEl.remove(), 600);
+    canvasInner.style.height = vh() + 'px';
     startPolling();
   } else {
     authInput.value = '';
@@ -222,6 +244,8 @@ async function tryAuth(code) {
 function renderObject(obj) {
   if (rendered.has(obj.id)) return;
   rendered.add(obj.id);
+
+  expandCanvas(obj.x, obj.y, obj.w, obj.h);
 
   const el = document.createElement('div');
   el.className = `obj obj-${obj.type}`;
@@ -240,7 +264,7 @@ function renderObject(obj) {
     audio.controls = true; audio.src = obj.content;
     el.appendChild(audio);
   }
-  canvas.appendChild(el);
+  canvasInner.appendChild(el);
 }
 
 // ── POLLING ───────────────────────────────────────────────────────────────────
@@ -280,7 +304,7 @@ async function sendText() {
     const res = await fetch('/api/post/text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, vw: window.innerWidth, vh: window.innerHeight - 80 })
+      body: JSON.stringify({ text, vw: vw(), vh: vh() })
     });
     if (!res.ok) return showToast('слишком длинно');
     renderObject(await res.json());
@@ -288,33 +312,28 @@ async function sendText() {
 }
 
 sendBtn.addEventListener('click', sendText);
-
 textInput.addEventListener('keydown', e => {
-  // desktop: Enter sends, Shift+Enter = newline
   if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 600) {
     e.preventDefault();
     sendText();
   }
 });
 
-// ── ATTACH FILE ───────────────────────────────────────────────────────────────
+// ── ATTACH ────────────────────────────────────────────────────────────────────
 attachBtn.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => {
   if (fileInput.files[0]) uploadFile(fileInput.files[0]);
   fileInput.value = '';
 });
 
-// ── DRAG & DROP ───────────────────────────────────────────────────────────────
 document.addEventListener('dragover', e => { e.preventDefault(); dropOverlay.classList.add('active'); });
 document.addEventListener('dragleave', e => { if (!e.relatedTarget) dropOverlay.classList.remove('active'); });
 document.addEventListener('drop', async e => {
   e.preventDefault(); dropOverlay.classList.remove('active');
   if (!authed) return;
-  const file = e.dataTransfer.files[0];
-  if (file) uploadFile(file);
+  if (e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]);
 });
 
-// ── PASTE ─────────────────────────────────────────────────────────────────────
 document.addEventListener('paste', async e => {
   if (!authed) return;
   const item = [...e.clipboardData.items].find(i => i.type.startsWith('image/'));
@@ -325,8 +344,8 @@ async function uploadFile(file) {
   if (file.size > 2 * 1024 * 1024) return showToast('файл слишком большой (макс 2mb)');
   const fd = new FormData();
   fd.append('file', file);
-  fd.append('vw', window.innerWidth);
-  fd.append('vh', window.innerHeight - 80);
+  fd.append('vw', vw());
+  fd.append('vh', vh());
   try {
     const res = await fetch('/api/post/file', { method: 'POST', body: fd });
     if (!res.ok) return showToast('неподдерживаемый формат');
