@@ -147,6 +147,21 @@
   #lang-indicator.visible { display: block; }
   #lang-indicator:hover { color: #999; }
 
+  /* ── ORIGINAL TOGGLE ── */
+  #orig-toggle {
+    position: fixed; top: 14px; left: 14px;
+    font-size: 0.62rem; color: #ccc;
+    letter-spacing: 0.08em; z-index: 600;
+    cursor: pointer; display: none;
+    border: none; background: none;
+    font-family: inherit; padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.2s;
+  }
+  #orig-toggle.visible { display: block; }
+  #orig-toggle:hover { color: #999; }
+  #orig-toggle.active { color: #111; }
+
   /* ── DROP ── */
   #drop-overlay {
     position: fixed; inset: 0;
@@ -189,6 +204,9 @@
 
 <!-- LANG INDICATOR -->
 <div id="lang-indicator"></div>
+
+<!-- ORIGINAL TOGGLE -->
+<button id="orig-toggle">original</button>
 
 <!-- TOOLBAR -->
 <div id="toolbar">
@@ -252,8 +270,9 @@ const UI = {
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let userLang = null; // язык пользователя (пишет И читает на нём)
-let authed   = false;
-const store  = new Map();
+let authed          = false;
+let showingOriginal = false;
+const store         = new Map();
 
 // ── ELEMENTS ──────────────────────────────────────────────────────────────────
 const authScreen   = document.getElementById('auth');
@@ -269,6 +288,7 @@ const attachBtn    = document.getElementById('attach-btn');
 const fileInput    = document.getElementById('file-input');
 const dropOverlay  = document.getElementById('drop-overlay');
 const langIndicator= document.getElementById('lang-indicator');
+const origToggle   = document.getElementById('orig-toggle');
 const toast        = document.getElementById('toast');
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
@@ -342,8 +362,53 @@ function startApp() {
   langIndicator.title = 'change language';
   langIndicator.addEventListener('click', () => location.reload());
 
+  // original toggle — label in user's language
+  const origLabels = {
+    en: ['original', 'translated'],
+    ru: ['оригинал', 'перевод'],
+    de: ['original', 'übersetzt'],
+    fr: ['original', 'traduit'],
+    es: ['original', 'traducido'],
+    it: ['originale', 'tradotto'],
+    pt: ['original', 'traduzido'],
+    pl: ['oryginał', 'przetłumaczone'],
+    nl: ['origineel', 'vertaald'],
+    tr: ['orijinal', 'çevrilmiş'],
+    uk: ['оригінал', 'переклад'],
+    sv: ['original', 'översatt'],
+    ar: ['أصلي', 'مترجم'],
+    zh: ['原文', '已翻译'],
+    ja: ['オリジナル', '翻訳'],
+    ko: ['원본', '번역됨'],
+  };
+  const ol = origLabels[userLang] || origLabels['en'];
+  showingOriginal = false;
+
+  origToggle.textContent = ol[0]; // starts showing "original" label = click to see originals
+  origToggle.classList.add('visible');
+
+  origToggle.addEventListener('click', async () => {
+    showingOriginal = !showingOriginal;
+    origToggle.textContent = showingOriginal ? ol[1] : ol[0];
+    origToggle.classList.toggle('active', showingOriginal);
+    await rerenderAll(showingOriginal);
+  });
+
   canvasInner.style.height = (window.innerHeight - 80) + 'px';
   startPolling();
+}
+
+// ── RERENDER ALL (switch translation mode) ───────────────────────────────────
+async function rerenderAll(original) {
+  for (const { obj, el } of store.values()) {
+    if (obj.type !== 'text') continue;
+    if (original) {
+      el.textContent = obj.content;
+    } else {
+      const translated = await clientTranslate(obj.content, obj.sourceLang);
+      el.textContent = translated || obj.content;
+    }
+  }
 }
 
 // ── TRANSLATE ─────────────────────────────────────────────────────────────────
@@ -378,7 +443,7 @@ async function renderObject(obj) {
   el.style.top  = obj.y + 'px';
 
   if (obj.type === 'text') {
-    const translated = await clientTranslate(obj.content, obj.sourceLang);
+    const translated = showingOriginal ? null : await clientTranslate(obj.content, obj.sourceLang);
     el.textContent = translated || obj.content;
   } else if (obj.type === 'image') {
     const img = document.createElement('img');
