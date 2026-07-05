@@ -13,14 +13,19 @@
     overflow: hidden;
   }
 
-  /* ── AUTH ── */
-  #auth {
+  /* ── SCREENS ── */
+  .screen {
     position: fixed; inset: 0;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
     background: #fff; z-index: 1000;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.4s ease;
+    gap: 32px;
   }
-  #auth.hidden { opacity: 0; pointer-events: none; }
+  .screen.hidden { opacity: 0; pointer-events: none; }
+  .screen.gone { display: none; }
+
+  /* AUTH */
   #auth input {
     border: none; border-bottom: 1px solid #ddd; outline: none;
     font-family: inherit; font-size: 1.2rem;
@@ -29,6 +34,44 @@
     padding-bottom: 8px; caret-color: #999;
   }
   #auth input::placeholder { color: #ddd; }
+
+  /* LANG PICKER */
+  #lang-picker h2 {
+    font-size: 0.7rem; color: #bbb;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    font-weight: normal;
+  }
+
+  #lang-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    max-width: 360px;
+    width: 90vw;
+  }
+
+  .lang-btn {
+    border: 1px solid #e8e8e8; border-radius: 4px;
+    padding: 10px 4px;
+    font-family: inherit; font-size: 0.72rem;
+    color: #555; background: #fafafa;
+    cursor: pointer; text-align: center;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    line-height: 1.3;
+  }
+  .lang-btn:hover { border-color: #ccc; color: #111; }
+  .lang-btn.selected { border-color: #111; background: #111; color: #fff; }
+
+  #lang-confirm {
+    border: none; background: none;
+    font-family: inherit; font-size: 0.7rem;
+    color: #bbb; letter-spacing: 0.1em;
+    cursor: pointer; padding: 4px 0;
+    border-bottom: 1px solid #e0e0e0;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  #lang-confirm:hover { color: #111; border-color: #111; }
 
   /* ── CANVAS ── */
   #canvas {
@@ -52,70 +95,6 @@
   .obj-image img { display: block; max-width: min(260px, 75vw); max-height: 200px; object-fit: contain; }
   .obj-audio audio { display: block; width: min(260px, 80vw); height: 36px; }
 
-  /* ── SETTINGS BUTTON ── */
-  #settings-btn {
-    position: fixed; top: 14px; right: 14px;
-    z-index: 600; display: none;
-    width: 32px; height: 32px;
-    align-items: center; justify-content: center;
-    cursor: pointer; color: #ccc;
-    -webkit-tap-highlight-color: transparent;
-    transition: color 0.2s;
-  }
-  #settings-btn.visible { display: flex; }
-  #settings-btn:hover { color: #999; }
-
-  /* ── SETTINGS PANEL ── */
-  #settings-panel {
-    position: fixed; top: 52px; right: 14px;
-    z-index: 700;
-    background: #fff; border: 1px solid #ebebeb;
-    border-radius: 6px; padding: 16px;
-    width: 240px;
-    display: none; flex-direction: column; gap: 14px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-  }
-  #settings-panel.open { display: flex; }
-
-  .setting-row { display: flex; flex-direction: column; gap: 5px; }
-  .setting-label { font-size: 0.6rem; color: #bbb; letter-spacing: 0.1em; text-transform: uppercase; }
-
-  .setting-row select {
-    border: 1px solid #e0e0e0; border-radius: 4px;
-    padding: 6px 8px;
-    font-family: inherit; font-size: 0.78rem; color: #111;
-    background: #fafafa; outline: none; cursor: pointer;
-    appearance: none; -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23ccc' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    padding-right: 24px;
-  }
-
-  /* translate toggle inside settings */
-  .toggle-row {
-    display: flex; align-items: center;
-    justify-content: space-between;
-  }
-  .toggle-row span { font-size: 0.78rem; color: #555; }
-  .switch {
-    width: 36px; height: 20px;
-    background: #e0e0e0; border-radius: 10px;
-    position: relative; transition: background 0.2s;
-    cursor: pointer; flex-shrink: 0;
-  }
-  .switch::after {
-    content: '';
-    position: absolute;
-    width: 14px; height: 14px;
-    background: #fff; border-radius: 50%;
-    top: 3px; left: 3px;
-    transition: transform 0.2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-  }
-  .switch.on { background: #111; }
-  .switch.on::after { transform: translateX(16px); }
-
   /* ── TOOLBAR ── */
   #toolbar {
     position: fixed; bottom: 0; left: 0; right: 0;
@@ -131,7 +110,6 @@
     font-family: inherit; font-size: 0.82rem; line-height: 1.4;
     color: #111; background: #fafafa;
     resize: none; outline: none; caret-color: #999;
-    transition: border-color 0.2s;
   }
   #toolbar textarea:focus { border-color: #ccc; background: #fff; }
   #toolbar textarea::placeholder { color: #ccc; }
@@ -147,8 +125,8 @@
   #attach-btn svg { color: #bbb; }
 
   #send-btn {
-    width: 48px; height: 48px;
-    border: none; border-radius: 4px; background: #111;
+    width: 48px; height: 48px; border: none;
+    border-radius: 4px; background: #111;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; flex-shrink: 0;
     -webkit-tap-highlight-color: transparent;
@@ -157,6 +135,17 @@
   #send-btn svg { color: #fff; }
 
   #file-input { display: none; }
+
+  /* ── LANG INDICATOR (top right) ── */
+  #lang-indicator {
+    position: fixed; top: 14px; right: 14px;
+    font-size: 0.62rem; color: #ccc;
+    letter-spacing: 0.08em; z-index: 600;
+    cursor: pointer; display: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #lang-indicator.visible { display: block; }
+  #lang-indicator:hover { color: #999; }
 
   /* ── DROP ── */
   #drop-overlay {
@@ -173,7 +162,7 @@
   #toast {
     position: fixed; bottom: 90px; left: 50%;
     transform: translateX(-50%);
-    font-size: 0.7rem; color: #999; letter-spacing: 0.08em;
+    font-size: 0.7rem; color: #999;
     z-index: 900; background: #fff;
     padding: 6px 12px; border: 1px solid #eee; border-radius: 3px;
     opacity: 0; transition: opacity 0.3s; white-space: nowrap;
@@ -183,34 +172,23 @@
 </head>
 <body>
 
-<div id="auth">
+<!-- SCREEN 1: PASSWORD -->
+<div class="screen" id="auth">
   <input id="auth-input" type="password" placeholder="· · · · ·" autocomplete="off" spellcheck="false">
 </div>
 
+<!-- SCREEN 2: LANGUAGE PICKER -->
+<div class="screen gone" id="lang-picker">
+  <h2 id="lang-title">choose your language</h2>
+  <div id="lang-grid"></div>
+  <button id="lang-confirm" disabled>continue →</button>
+</div>
+
+<!-- CANVAS -->
 <div id="canvas"><div id="canvas-inner"></div></div>
 
-<!-- SETTINGS BUTTON -->
-<div id="settings-btn">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-    <circle cx="12" cy="12" r="3"/>
-    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-  </svg>
-</div>
-
-<!-- SETTINGS PANEL -->
-<div id="settings-panel">
-  <div class="setting-row">
-    <span class="setting-label" id="lbl-write">я пишу на</span>
-    <select id="select-write"></select>
-  </div>
-  <div class="setting-row">
-    <div class="toggle-row">
-      <span id="lbl-translate">переводить на</span>
-      <div class="switch" id="translate-switch"></div>
-    </div>
-    <select id="select-read" style="margin-top:6px"></select>
-  </div>
-</div>
+<!-- LANG INDICATOR -->
+<div id="lang-indicator"></div>
 
 <!-- TOOLBAR -->
 <div id="toolbar">
@@ -228,7 +206,7 @@
 </div>
 
 <input type="file" id="file-input" accept="image/*,audio/*">
-<div id="drop-overlay"><span id="drop-text">drop file here</span></div>
+<div id="drop-overlay">drop file here</div>
 <div id="toast"></div>
 
 <script>
@@ -244,113 +222,54 @@ const LANGUAGES = [
   { code: 'pl', label: 'Polski' },
   { code: 'nl', label: 'Nederlands' },
   { code: 'tr', label: 'Türkçe' },
+  { code: 'uk', label: 'Українська' },
+  { code: 'sv', label: 'Svenska' },
   { code: 'ar', label: 'العربية' },
   { code: 'zh', label: '中文' },
   { code: 'ja', label: '日本語' },
   { code: 'ko', label: '한국어' },
-  { code: 'uk', label: 'Українська' },
-  { code: 'sv', label: 'Svenska' },
-  { code: 'fi', label: 'Suomi' },
-  { code: 'da', label: 'Dansk' },
-  { code: 'cs', label: 'Čeština' },
-  { code: 'ro', label: 'Română' },
 ];
 
-// ── I18N UI ───────────────────────────────────────────────────────────────────
+// UI strings per language
 const UI = {
-  ru: { placeholder: 'написать что-нибудь...', drop: 'перетащи файл сюда', write: 'я пишу на', translate: 'переводить на' },
-  en: { placeholder: 'write something...', drop: 'drop file here', write: 'i write in', translate: 'translate to' },
-  de: { placeholder: 'etwas schreiben...', drop: 'Datei hier ablegen', write: 'ich schreibe auf', translate: 'übersetzen in' },
-  fr: { placeholder: 'écrire quelque chose...', drop: 'déposer ici', write: 'j\'écris en', translate: 'traduire en' },
-  es: { placeholder: 'escribe algo...', drop: 'soltar archivo aquí', write: 'escribo en', translate: 'traducir a' },
-  it: { placeholder: 'scrivi qualcosa...', drop: 'trascina qui', write: 'scrivo in', translate: 'traduci in' },
-  pt: { placeholder: 'escreva algo...', drop: 'soltar aqui', write: 'escrevo em', translate: 'traduzir para' },
-  zh: { placeholder: '写点什么...', drop: '拖放文件到这里', write: '我用...写', translate: '翻译成' },
-  ja: { placeholder: '何か書いてください...', drop: 'ファイルをドロップ', write: '書く言語', translate: '翻訳先' },
-  ko: { placeholder: '무언가 써보세요...', drop: '파일을 여기에 놓으세요', write: '쓰는 언어', translate: '번역 언어' },
+  en: { title: 'choose your language', confirm: 'continue →', placeholder: 'write something...', drop: 'drop file here' },
+  ru: { title: 'выберите язык', confirm: 'продолжить →', placeholder: 'написать что-нибудь...', drop: 'перетащи файл сюда' },
+  de: { title: 'Sprache wählen', confirm: 'weiter →', placeholder: 'etwas schreiben...', drop: 'Datei hier ablegen' },
+  fr: { title: 'choisir la langue', confirm: 'continuer →', placeholder: 'écrire quelque chose...', drop: 'déposer ici' },
+  es: { title: 'elige tu idioma', confirm: 'continuar →', placeholder: 'escribe algo...', drop: 'soltar archivo aquí' },
+  it: { title: 'scegli la lingua', confirm: 'continua →', placeholder: 'scrivi qualcosa...', drop: 'trascina qui' },
+  pt: { title: 'escolha o idioma', confirm: 'continuar →', placeholder: 'escreva algo...', drop: 'soltar aqui' },
+  pl: { title: 'wybierz język', confirm: 'kontynuuj →', placeholder: 'napisz coś...', drop: 'upuść plik tutaj' },
+  nl: { title: 'kies je taal', confirm: 'doorgaan →', placeholder: 'schrijf iets...', drop: 'bestand neerzetten' },
+  tr: { title: 'dil seç', confirm: 'devam →', placeholder: 'bir şeyler yaz...', drop: 'dosyayı buraya bırak' },
+  uk: { title: 'оберіть мову', confirm: 'продовжити →', placeholder: 'написати щось...', drop: 'перетягни файл сюди' },
+  sv: { title: 'välj språk', confirm: 'fortsätt →', placeholder: 'skriv något...', drop: 'släpp fil här' },
+  ar: { title: 'اختر لغتك', confirm: '← متابعة', placeholder: 'اكتب شيئاً...', drop: 'أسقط الملف هنا' },
+  zh: { title: '选择语言', confirm: '继续 →', placeholder: '写点什么...', drop: '拖放文件到这里' },
+  ja: { title: '言語を選んでください', confirm: '続ける →', placeholder: '何か書いてください...', drop: 'ファイルをドロップ' },
+  ko: { title: '언어를 선택하세요', confirm: '계속 →', placeholder: '무언가 써보세요...', drop: '파일을 여기에 놓으세요' },
 };
 
-const browserLang = (navigator.language || 'en').slice(0, 2);
-const ui = UI[browserLang] || UI['en'];
-
-// ── STATE (localStorage) ──────────────────────────────────────────────────────
-let writeLang    = localStorage.getItem('scatter_write') || browserLang;
-let readLang     = localStorage.getItem('scatter_read')  || browserLang;
-let translateOn  = localStorage.getItem('scatter_translate') !== 'off';
-let authed       = false;
-const store      = new Map(); // id → { obj, el }
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let userLang = null; // язык пользователя (пишет И читает на нём)
+let authed   = false;
+const store  = new Map();
 
 // ── ELEMENTS ──────────────────────────────────────────────────────────────────
-const authEl       = document.getElementById('auth');
+const authScreen   = document.getElementById('auth');
 const authInput    = document.getElementById('auth-input');
+const langScreen   = document.getElementById('lang-picker');
+const langGrid     = document.getElementById('lang-grid');
+const langTitle    = document.getElementById('lang-title');
+const langConfirm  = document.getElementById('lang-confirm');
 const canvasInner  = document.getElementById('canvas-inner');
 const textInput    = document.getElementById('text-input');
 const sendBtn      = document.getElementById('send-btn');
 const attachBtn    = document.getElementById('attach-btn');
 const fileInput    = document.getElementById('file-input');
 const dropOverlay  = document.getElementById('drop-overlay');
-const dropText     = document.getElementById('drop-text');
+const langIndicator= document.getElementById('lang-indicator');
 const toast        = document.getElementById('toast');
-const settingsBtn  = document.getElementById('settings-btn');
-const settingsPanel= document.getElementById('settings-panel');
-const selectWrite  = document.getElementById('select-write');
-const selectRead   = document.getElementById('select-read');
-const switchEl     = document.getElementById('translate-switch');
-
-// ── APPLY UI STRINGS ──────────────────────────────────────────────────────────
-textInput.placeholder = ui.placeholder;
-dropText.textContent  = ui.drop;
-document.getElementById('lbl-write').textContent     = ui.write;
-document.getElementById('lbl-translate').textContent = ui.translate;
-
-// ── POPULATE SELECTS ──────────────────────────────────────────────────────────
-function buildSelect(el, selected) {
-  el.innerHTML = '';
-  LANGUAGES.forEach(l => {
-    const opt = document.createElement('option');
-    opt.value = l.code;
-    opt.textContent = l.label;
-    if (l.code === selected) opt.selected = true;
-    el.appendChild(opt);
-  });
-}
-buildSelect(selectWrite, writeLang);
-buildSelect(selectRead, readLang);
-syncSwitch();
-
-function syncSwitch() {
-  switchEl.classList.toggle('on', translateOn);
-  selectRead.style.opacity = translateOn ? '1' : '0.35';
-  selectRead.style.pointerEvents = translateOn ? 'auto' : 'none';
-}
-
-// ── SETTINGS EVENTS ───────────────────────────────────────────────────────────
-settingsBtn.addEventListener('click', e => {
-  e.stopPropagation();
-  settingsPanel.classList.toggle('open');
-});
-document.addEventListener('click', e => {
-  if (!settingsPanel.contains(e.target) && e.target !== settingsBtn)
-    settingsPanel.classList.remove('open');
-});
-
-selectWrite.addEventListener('change', () => {
-  writeLang = selectWrite.value;
-  localStorage.setItem('scatter_write', writeLang);
-});
-
-selectRead.addEventListener('change', async () => {
-  readLang = selectRead.value;
-  localStorage.setItem('scatter_read', readLang);
-  if (translateOn) await applyTranslationToAll();
-});
-
-switchEl.addEventListener('click', async () => {
-  translateOn = !translateOn;
-  localStorage.setItem('scatter_translate', translateOn ? 'on' : 'off');
-  syncSwitch();
-  await applyTranslationToAll();
-});
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
 authInput.focus();
@@ -365,11 +284,11 @@ async function tryAuth(code) {
   const { ok } = await apiPost('/api/auth', { code });
   if (ok) {
     authed = true;
-    authEl.classList.add('hidden');
-    setTimeout(() => authEl.remove(), 600);
-    canvasInner.style.height = (window.innerHeight - 80) + 'px';
-    settingsBtn.classList.add('visible');
-    startPolling();
+    authScreen.classList.add('hidden');
+    setTimeout(() => {
+      authScreen.classList.add('gone');
+      showLangPicker();
+    }, 450);
   } else {
     authInput.value = '';
     authInput.style.color = '#e88';
@@ -377,32 +296,67 @@ async function tryAuth(code) {
   }
 }
 
+// ── LANG PICKER ───────────────────────────────────────────────────────────────
+function showLangPicker() {
+  langScreen.classList.remove('gone');
+  // build grid
+  langGrid.innerHTML = '';
+  LANGUAGES.forEach(l => {
+    const btn = document.createElement('button');
+    btn.className = 'lang-btn';
+    btn.textContent = l.label;
+    btn.dataset.code = l.code;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      userLang = l.code;
+      langConfirm.disabled = false;
+      // update picker UI to selected language
+      const u = UI[l.code] || UI['en'];
+      langTitle.textContent = u.title;
+      langConfirm.textContent = u.confirm;
+    });
+    langGrid.appendChild(btn);
+  });
+}
+
+langConfirm.addEventListener('click', () => {
+  if (!userLang) return;
+  langScreen.classList.add('hidden');
+  setTimeout(() => {
+    langScreen.classList.add('gone');
+    startApp();
+  }, 450);
+});
+
+// ── START APP ─────────────────────────────────────────────────────────────────
+function startApp() {
+  const u = UI[userLang] || UI['en'];
+  textInput.placeholder = u.placeholder;
+  document.getElementById('drop-overlay').textContent = u.drop;
+
+  // show lang indicator top-right — click to reload and repick
+  const lang = LANGUAGES.find(l => l.code === userLang);
+  langIndicator.textContent = lang ? lang.label : userLang;
+  langIndicator.classList.add('visible');
+  langIndicator.title = 'change language';
+  langIndicator.addEventListener('click', () => location.reload());
+
+  canvasInner.style.height = (window.innerHeight - 80) + 'px';
+  startPolling();
+}
+
 // ── TRANSLATE ─────────────────────────────────────────────────────────────────
 async function clientTranslate(text, sourceLang) {
-  const target = readLang;
-  if (!translateOn) return null;
-  if (sourceLang === target) return null;
-  const from = sourceLang || 'en';
+  if (!sourceLang || sourceLang === userLang) return null;
   try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${target}`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${userLang}`;
     const res = await fetch(url);
     if (!res.ok) return null;
     const data = await res.json();
     if (data.responseStatus === 200) return data.responseData.translatedText;
     return null;
   } catch { return null; }
-}
-
-async function applyTranslationToAll() {
-  for (const { obj, el } of store.values()) {
-    if (obj.type !== 'text') continue;
-    if (translateOn) {
-      const translated = await clientTranslate(obj.content, obj.sourceLang);
-      el.textContent = translated || obj.content;
-    } else {
-      el.textContent = obj.content;
-    }
-  }
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
@@ -415,7 +369,6 @@ function expandCanvas(x, y, w, h) {
 
 async function renderObject(obj) {
   if (store.has(obj.id)) return;
-
   expandCanvas(obj.x, obj.y, obj.w, obj.h);
 
   const el = document.createElement('div');
@@ -425,12 +378,8 @@ async function renderObject(obj) {
   el.style.top  = obj.y + 'px';
 
   if (obj.type === 'text') {
-    let display = obj.content;
-    if (translateOn) {
-      const translated = await clientTranslate(obj.content, obj.sourceLang);
-      if (translated) display = translated;
-    }
-    el.textContent = display;
+    const translated = await clientTranslate(obj.content, obj.sourceLang);
+    el.textContent = translated || obj.content;
   } else if (obj.type === 'image') {
     const img = document.createElement('img');
     img.src = obj.content; img.draggable = false;
@@ -474,16 +423,11 @@ async function sendText() {
     const res = await fetch('/api/post/text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text,
-        lang: writeLang,
-        vw: window.innerWidth,
-        vh: window.innerHeight - 80
-      })
+      body: JSON.stringify({ text, lang: userLang, vw: window.innerWidth, vh: window.innerHeight - 80 })
     });
-    if (!res.ok) return showToast('слишком длинно');
+    if (!res.ok) return showToast('too long');
     await renderObject(await res.json());
-  } catch { showToast('ошибка'); }
+  } catch { showToast('error'); }
 }
 
 sendBtn.addEventListener('click', sendText);
@@ -499,7 +443,6 @@ fileInput.addEventListener('change', () => {
   if (fileInput.files[0]) uploadFile(fileInput.files[0]);
   fileInput.value = '';
 });
-
 document.addEventListener('dragover', e => { e.preventDefault(); dropOverlay.classList.add('active'); });
 document.addEventListener('dragleave', e => { if (!e.relatedTarget) dropOverlay.classList.remove('active'); });
 document.addEventListener('drop', async e => {
@@ -516,9 +459,7 @@ document.addEventListener('paste', async e => {
 async function uploadFile(file) {
   if (file.size > 2 * 1024 * 1024) return showToast('max 2mb');
   const fd = new FormData();
-  fd.append('file', file);
-  fd.append('vw', window.innerWidth);
-  fd.append('vh', window.innerHeight - 80);
+  fd.append('file', file); fd.append('vw', window.innerWidth); fd.append('vh', window.innerHeight - 80);
   try {
     const res = await fetch('/api/post/file', { method: 'POST', body: fd });
     if (!res.ok) return showToast('unsupported format');
@@ -528,13 +469,9 @@ async function uploadFile(file) {
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 async function apiPost(url, data) {
-  const res = await fetch(url, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
   return res.json();
 }
-
 let toastTimer;
 function showToast(msg) {
   toast.textContent = msg; toast.classList.add('show');
