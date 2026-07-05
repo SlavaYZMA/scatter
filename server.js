@@ -88,7 +88,7 @@ function findFreeSpot(w, h, viewportW, viewportH) {
 
 // ─── API: добавить текст ──────────────────────────────────────────────────────
 app.post('/api/post/text', async (req, res) => {
-  const { text, vw, vh } = req.body;
+  const { text, vw, vh, lang: senderLang } = req.body;
   if (!text || text.length > MAX_TEXT_LENGTH) return res.status(400).json({ error: 'invalid text' });
 
   const w = Math.min(320, Math.max(160, text.length * 8));
@@ -105,6 +105,7 @@ app.post('/api/post/text', async (req, res) => {
     id: uuidv4(),
     type: 'text',
     content: text.trim(),
+    sourceLang: (senderLang || 'en').slice(0, 2),
     x: spot ? spot.x : Math.random() * 600,
     y: spot ? spot.y : Math.random() * 400,
     w, h,

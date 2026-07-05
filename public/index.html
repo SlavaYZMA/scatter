@@ -310,10 +310,11 @@ async function applyTranslationToAll() {
 }
 
 // перевод через MyMemory прямо с клиента
-async function clientTranslate(text) {
-  if (LANG === 'en') return null; // английским не переводим на английский
+async function clientTranslate(text, sourceLang) {
+  if (LANG === sourceLang) return null; // уже на нужном языке
+  const from = sourceLang || 'en';
   try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=autodetect|${LANG}`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${LANG}`;
     const res = await fetch(url);
     if (!res.ok) return null;
     const data = await res.json();
@@ -337,7 +338,7 @@ async function renderObject(obj) {
   if (obj.type === 'text') {
     let displayText = obj.content;
     if (translateOn) {
-      const translated = await clientTranslate(obj.content);
+      const translated = await clientTranslate(obj.content, obj.sourceLang);
       if (translated) displayText = translated;
     }
     el.textContent = displayText;
@@ -397,7 +398,7 @@ async function sendText() {
     const res = await fetch('/api/post/text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, vw: vw(), vh: vh() })
+      body: JSON.stringify({ text, vw: vw(), vh: vh(), lang: LANG })
     });
     if (!res.ok) return showToast('слишком длинно');
     await renderObject(await res.json());
