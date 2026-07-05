@@ -6,10 +6,9 @@
 <title>scatter</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   html, body {
     width: 100%; height: 100%;
-    background: #ffffff;
+    background: #fff;
     font-family: 'Courier New', Courier, monospace;
     overflow: hidden;
   }
@@ -29,21 +28,14 @@
     background: transparent; color: #111; width: 200px;
     padding-bottom: 8px; caret-color: #999;
   }
-  #auth input::placeholder { color: #ddd; letter-spacing: 0.2em; }
+  #auth input::placeholder { color: #ddd; }
 
   /* ── CANVAS ── */
   #canvas {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    bottom: 80px;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 80px;
+    overflow: auto; -webkit-overflow-scrolling: touch;
   }
-  #canvas-inner {
-    position: relative;
-    width: 100%;
-    min-height: 100%;
-  }
+  #canvas-inner { position: relative; width: 100%; min-height: 100%; }
 
   /* ── OBJECTS ── */
   .obj {
@@ -60,17 +52,78 @@
   .obj-image img { display: block; max-width: min(260px, 75vw); max-height: 200px; object-fit: contain; }
   .obj-audio audio { display: block; width: min(260px, 80vw); height: 36px; }
 
+  /* ── SETTINGS BUTTON ── */
+  #settings-btn {
+    position: fixed; top: 14px; right: 14px;
+    z-index: 600; display: none;
+    width: 32px; height: 32px;
+    align-items: center; justify-content: center;
+    cursor: pointer; color: #ccc;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.2s;
+  }
+  #settings-btn.visible { display: flex; }
+  #settings-btn:hover { color: #999; }
+
+  /* ── SETTINGS PANEL ── */
+  #settings-panel {
+    position: fixed; top: 52px; right: 14px;
+    z-index: 700;
+    background: #fff; border: 1px solid #ebebeb;
+    border-radius: 6px; padding: 16px;
+    width: 240px;
+    display: none; flex-direction: column; gap: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  #settings-panel.open { display: flex; }
+
+  .setting-row { display: flex; flex-direction: column; gap: 5px; }
+  .setting-label { font-size: 0.6rem; color: #bbb; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  .setting-row select {
+    border: 1px solid #e0e0e0; border-radius: 4px;
+    padding: 6px 8px;
+    font-family: inherit; font-size: 0.78rem; color: #111;
+    background: #fafafa; outline: none; cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23ccc' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+  }
+
+  /* translate toggle inside settings */
+  .toggle-row {
+    display: flex; align-items: center;
+    justify-content: space-between;
+  }
+  .toggle-row span { font-size: 0.78rem; color: #555; }
+  .switch {
+    width: 36px; height: 20px;
+    background: #e0e0e0; border-radius: 10px;
+    position: relative; transition: background 0.2s;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .switch::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    background: #fff; border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .switch.on { background: #111; }
+  .switch.on::after { transform: translateX(16px); }
+
   /* ── TOOLBAR ── */
   #toolbar {
     position: fixed; bottom: 0; left: 0; right: 0;
-    height: 80px;
-    background: #fff;
+    height: 80px; background: #fff;
     border-top: 1px solid #ebebeb;
     display: flex; align-items: center;
-    padding: 0 12px; gap: 8px;
-    z-index: 500;
+    padding: 0 12px; gap: 8px; z-index: 500;
   }
-
   #toolbar textarea {
     flex: 1; height: 48px;
     border: 1px solid #e0e0e0; border-radius: 4px;
@@ -85,8 +138,7 @@
 
   #attach-btn {
     width: 48px; height: 48px;
-    border: 1px solid #e0e0e0; border-radius: 4px;
-    background: #fafafa;
+    border: 1px solid #e0e0e0; border-radius: 4px; background: #fafafa;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; flex-shrink: 0;
     -webkit-tap-highlight-color: transparent;
@@ -105,48 +157,6 @@
   #send-btn svg { color: #fff; }
 
   #file-input { display: none; }
-
-  /* ── TRANSLATE TOGGLE ── */
-  #translate-toggle {
-    position: fixed; top: 14px; right: 14px;
-    z-index: 600;
-    display: none; /* скрыт до авторизации */
-    align-items: center; gap: 7px;
-    font-size: 0.65rem; color: #bbb;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-  }
-  #translate-toggle.visible { display: flex; }
-
-  /* pill switch */
-  .switch {
-    width: 36px; height: 20px;
-    background: #e0e0e0; border-radius: 10px;
-    position: relative; transition: background 0.2s;
-    flex-shrink: 0;
-  }
-  .switch::after {
-    content: '';
-    position: absolute;
-    width: 14px; height: 14px;
-    background: #fff; border-radius: 50%;
-    top: 3px; left: 3px;
-    transition: transform 0.2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-  }
-  #translate-toggle.on .switch { background: #111; }
-  #translate-toggle.on .switch::after { transform: translateX(16px); }
-
-  /* char counter */
-  #char-count {
-    position: fixed; bottom: 88px; right: 14px;
-    font-size: 0.6rem; color: #ccc; font-family: inherit;
-    z-index: 501; opacity: 0; transition: opacity 0.2s;
-  }
-  #char-count.visible { opacity: 1; }
-  #char-count.warn { color: #e88; }
 
   /* ── DROP ── */
   #drop-overlay {
@@ -177,23 +187,39 @@
   <input id="auth-input" type="password" placeholder="· · · · ·" autocomplete="off" spellcheck="false">
 </div>
 
-<div id="canvas">
-  <div id="canvas-inner"></div>
+<div id="canvas"><div id="canvas-inner"></div></div>
+
+<!-- SETTINGS BUTTON -->
+<div id="settings-btn">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+  </svg>
 </div>
 
-<!-- TRANSLATE TOGGLE -->
-<div id="translate-toggle" title="перевод">
-  <span id="toggle-label"id="toggle-label">...</span>
-  <div class="switch"></div>
+<!-- SETTINGS PANEL -->
+<div id="settings-panel">
+  <div class="setting-row">
+    <span class="setting-label" id="lbl-write">я пишу на</span>
+    <select id="select-write"></select>
+  </div>
+  <div class="setting-row">
+    <div class="toggle-row">
+      <span id="lbl-translate">переводить на</span>
+      <div class="switch" id="translate-switch"></div>
+    </div>
+    <select id="select-read" style="margin-top:6px"></select>
+  </div>
 </div>
 
+<!-- TOOLBAR -->
 <div id="toolbar">
-  <button id="attach-btn" title="прикрепить файл">
+  <button id="attach-btn">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
       <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
     </svg>
   </button>
-  <textarea id="text-input" id="text-placeholder" placeholder="..." maxlength="500" rows="2"></textarea>
+  <textarea id="text-input" rows="2" maxlength="500"></textarea>
   <button id="send-btn">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
@@ -201,67 +227,130 @@
   </button>
 </div>
 
-<span id="char-count">0 / 500</span>
 <input type="file" id="file-input" accept="image/*,audio/*">
-<div id="drop-overlay"><span id="drop-text">...</span></div>
+<div id="drop-overlay"><span id="drop-text">drop file here</span></div>
 <div id="toast"></div>
 
 <script>
-const LANG        = (navigator.language || 'en').slice(0, 2);
-let authed        = false;
-let translateOn   = true;
+// ── LANGUAGES ─────────────────────────────────────────────────────────────────
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'ru', label: 'Русский' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'fr', label: 'Français' },
+  { code: 'es', label: 'Español' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'pt', label: 'Português' },
+  { code: 'pl', label: 'Polski' },
+  { code: 'nl', label: 'Nederlands' },
+  { code: 'tr', label: 'Türkçe' },
+  { code: 'ar', label: 'العربية' },
+  { code: 'zh', label: '中文' },
+  { code: 'ja', label: '日本語' },
+  { code: 'ko', label: '한국어' },
+  { code: 'uk', label: 'Українська' },
+  { code: 'sv', label: 'Svenska' },
+  { code: 'fi', label: 'Suomi' },
+  { code: 'da', label: 'Dansk' },
+  { code: 'cs', label: 'Čeština' },
+  { code: 'ro', label: 'Română' },
+];
 
-// ── I18N ─────────────────────────────────────────────────────────────────────
-const i18n = {
-  ru: { placeholder: 'написать что-нибудь...', toggle: 'перевод', original: 'оригинал', drop: 'перетащи файл сюда' },
-  en: { placeholder: 'write something...', toggle: 'translate', original: 'original', drop: 'drop file here' },
-  de: { placeholder: 'etwas schreiben...', toggle: 'übersetzen', original: 'original', drop: 'Datei hier ablegen' },
-  fr: { placeholder: 'écrire quelque chose...', toggle: 'traduire', original: 'original', drop: 'déposer ici' },
-  es: { placeholder: 'escribe algo...', toggle: 'traducir', original: 'original', drop: 'soltar archivo aquí' },
-  it: { placeholder: 'scrivi qualcosa...', toggle: 'traduci', original: 'originale', drop: 'trascina qui' },
-  pt: { placeholder: 'escreva algo...', toggle: 'traduzir', original: 'original', drop: 'soltar aqui' },
-  zh: { placeholder: '写点什么...', toggle: '翻译', original: '原文', drop: '拖放文件到这里' },
-  ja: { placeholder: '何か書いてください...', toggle: '翻訳', original: 'オリジナル', drop: 'ファイルをドロップ' },
-  ko: { placeholder: '무언가 써보세요...', toggle: '번역', original: '원본', drop: '파일을 여기에 놓으세요' },
-  ar: { placeholder: 'اكتب شيئاً...', toggle: 'ترجمة', original: 'أصلي', drop: 'أسقط الملف هنا' },
-  tr: { placeholder: 'bir şeyler yaz...', toggle: 'çevir', original: 'orijinal', drop: 'dosyayı buraya bırak' },
-  pl: { placeholder: 'napisz coś...', toggle: 'tłumacz', original: 'oryginał', drop: 'upuść plik tutaj' },
-  nl: { placeholder: 'schrijf iets...', toggle: 'vertalen', original: 'origineel', drop: 'bestand neerzetten' },
+// ── I18N UI ───────────────────────────────────────────────────────────────────
+const UI = {
+  ru: { placeholder: 'написать что-нибудь...', drop: 'перетащи файл сюда', write: 'я пишу на', translate: 'переводить на' },
+  en: { placeholder: 'write something...', drop: 'drop file here', write: 'i write in', translate: 'translate to' },
+  de: { placeholder: 'etwas schreiben...', drop: 'Datei hier ablegen', write: 'ich schreibe auf', translate: 'übersetzen in' },
+  fr: { placeholder: 'écrire quelque chose...', drop: 'déposer ici', write: 'j\'écris en', translate: 'traduire en' },
+  es: { placeholder: 'escribe algo...', drop: 'soltar archivo aquí', write: 'escribo en', translate: 'traducir a' },
+  it: { placeholder: 'scrivi qualcosa...', drop: 'trascina qui', write: 'scrivo in', translate: 'traduci in' },
+  pt: { placeholder: 'escreva algo...', drop: 'soltar aqui', write: 'escrevo em', translate: 'traduzir para' },
+  zh: { placeholder: '写点什么...', drop: '拖放文件到这里', write: '我用...写', translate: '翻译成' },
+  ja: { placeholder: '何か書いてください...', drop: 'ファイルをドロップ', write: '書く言語', translate: '翻訳先' },
+  ko: { placeholder: '무언가 써보세요...', drop: '파일을 여기에 놓으세요', write: '쓰는 언어', translate: '번역 언어' },
 };
-const t = i18n[LANG] || i18n['en'];
 
-// хранилище объектов: id → { obj, el }
-const store = new Map();
+const browserLang = (navigator.language || 'en').slice(0, 2);
+const ui = UI[browserLang] || UI['en'];
 
-const authEl        = document.getElementById('auth');
-const authInput     = document.getElementById('auth-input');
-const canvasEl      = document.getElementById('canvas');
-const canvasInner   = document.getElementById('canvas-inner');
-const textInput     = document.getElementById('text-input');
-const sendBtn       = document.getElementById('send-btn');
-const attachBtn     = document.getElementById('attach-btn');
-const fileInput     = document.getElementById('file-input');
-const charCount     = document.getElementById('char-count');
-const dropOverlay   = document.getElementById('drop-overlay');
-const toast         = document.getElementById('toast');
-const toggleEl      = document.getElementById('translate-toggle');
-const toggleLabel   = document.getElementById('toggle-label');
+// ── STATE (localStorage) ──────────────────────────────────────────────────────
+let writeLang    = localStorage.getItem('scatter_write') || browserLang;
+let readLang     = localStorage.getItem('scatter_read')  || browserLang;
+let translateOn  = localStorage.getItem('scatter_translate') !== 'off';
+let authed       = false;
+const store      = new Map(); // id → { obj, el }
 
-// применить переводы интерфейса
-toggleEl.classList.toggle('on', translateOn);
-textInput.placeholder = t.placeholder;
-document.getElementById('drop-text').textContent = t.drop;
-toggleLabel.textContent = t.toggle;
+// ── ELEMENTS ──────────────────────────────────────────────────────────────────
+const authEl       = document.getElementById('auth');
+const authInput    = document.getElementById('auth-input');
+const canvasInner  = document.getElementById('canvas-inner');
+const textInput    = document.getElementById('text-input');
+const sendBtn      = document.getElementById('send-btn');
+const attachBtn    = document.getElementById('attach-btn');
+const fileInput    = document.getElementById('file-input');
+const dropOverlay  = document.getElementById('drop-overlay');
+const dropText     = document.getElementById('drop-text');
+const toast        = document.getElementById('toast');
+const settingsBtn  = document.getElementById('settings-btn');
+const settingsPanel= document.getElementById('settings-panel');
+const selectWrite  = document.getElementById('select-write');
+const selectRead   = document.getElementById('select-read');
+const switchEl     = document.getElementById('translate-switch');
 
-function vw() { return window.innerWidth; }
-function vh() { return window.innerHeight - 80; }
+// ── APPLY UI STRINGS ──────────────────────────────────────────────────────────
+textInput.placeholder = ui.placeholder;
+dropText.textContent  = ui.drop;
+document.getElementById('lbl-write').textContent     = ui.write;
+document.getElementById('lbl-translate').textContent = ui.translate;
 
-function expandCanvas(x, y, w, h) {
-  const curH = parseInt(canvasInner.style.height) || vh();
-  const curW = parseInt(canvasInner.style.minWidth) || vw();
-  if (y + h + 40 > curH) canvasInner.style.height = (y + h + 40) + 'px';
-  if (x + w + 40 > curW) canvasInner.style.minWidth = (x + w + 40) + 'px';
+// ── POPULATE SELECTS ──────────────────────────────────────────────────────────
+function buildSelect(el, selected) {
+  el.innerHTML = '';
+  LANGUAGES.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l.code;
+    opt.textContent = l.label;
+    if (l.code === selected) opt.selected = true;
+    el.appendChild(opt);
+  });
 }
+buildSelect(selectWrite, writeLang);
+buildSelect(selectRead, readLang);
+syncSwitch();
+
+function syncSwitch() {
+  switchEl.classList.toggle('on', translateOn);
+  selectRead.style.opacity = translateOn ? '1' : '0.35';
+  selectRead.style.pointerEvents = translateOn ? 'auto' : 'none';
+}
+
+// ── SETTINGS EVENTS ───────────────────────────────────────────────────────────
+settingsBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  settingsPanel.classList.toggle('open');
+});
+document.addEventListener('click', e => {
+  if (!settingsPanel.contains(e.target) && e.target !== settingsBtn)
+    settingsPanel.classList.remove('open');
+});
+
+selectWrite.addEventListener('change', () => {
+  writeLang = selectWrite.value;
+  localStorage.setItem('scatter_write', writeLang);
+});
+
+selectRead.addEventListener('change', async () => {
+  readLang = selectRead.value;
+  localStorage.setItem('scatter_read', readLang);
+  if (translateOn) await applyTranslationToAll();
+});
+
+switchEl.addEventListener('click', async () => {
+  translateOn = !translateOn;
+  localStorage.setItem('scatter_translate', translateOn ? 'on' : 'off');
+  syncSwitch();
+  await applyTranslationToAll();
+});
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
 authInput.focus();
@@ -278,8 +367,8 @@ async function tryAuth(code) {
     authed = true;
     authEl.classList.add('hidden');
     setTimeout(() => authEl.remove(), 600);
-    canvasInner.style.height = vh() + 'px';
-    toggleEl.classList.add('visible');
+    canvasInner.style.height = (window.innerHeight - 80) + 'px';
+    settingsBtn.classList.add('visible');
     startPolling();
   } else {
     authInput.value = '';
@@ -288,34 +377,14 @@ async function tryAuth(code) {
   }
 }
 
-// ── TRANSLATE TOGGLE ──────────────────────────────────────────────────────────
-toggleEl.addEventListener('click', async () => {
-  translateOn = !translateOn;
-  toggleEl.classList.toggle('on', translateOn);
-  toggleLabel.textContent = translateOn ? t.toggle : t.original;
-  await applyTranslationToAll();
-});
-
-// перевести или вернуть оригинал для всех текстовых объектов на экране
-async function applyTranslationToAll() {
-  const entries = [...store.values()].filter(s => s.obj.type === 'text');
-  for (const { obj, el } of entries) {
-    const original = obj.content;
-    if (translateOn) {
-      const translated = await clientTranslate(original, obj.sourceLang);
-      el.textContent = translated || original;
-    } else {
-      el.textContent = original;
-    }
-  }
-}
-
-// перевод через MyMemory прямо с клиента
+// ── TRANSLATE ─────────────────────────────────────────────────────────────────
 async function clientTranslate(text, sourceLang) {
-  if (LANG === sourceLang) return null; // уже на нужном языке
+  const target = readLang;
+  if (!translateOn) return null;
+  if (sourceLang === target) return null;
   const from = sourceLang || 'en';
   try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${LANG}`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${target}`;
     const res = await fetch(url);
     if (!res.ok) return null;
     const data = await res.json();
@@ -324,7 +393,26 @@ async function clientTranslate(text, sourceLang) {
   } catch { return null; }
 }
 
+async function applyTranslationToAll() {
+  for (const { obj, el } of store.values()) {
+    if (obj.type !== 'text') continue;
+    if (translateOn) {
+      const translated = await clientTranslate(obj.content, obj.sourceLang);
+      el.textContent = translated || obj.content;
+    } else {
+      el.textContent = obj.content;
+    }
+  }
+}
+
 // ── RENDER ────────────────────────────────────────────────────────────────────
+function expandCanvas(x, y, w, h) {
+  const curH = parseInt(canvasInner.style.height) || (window.innerHeight - 80);
+  const curW = parseInt(canvasInner.style.minWidth) || window.innerWidth;
+  if (y + h + 40 > curH) canvasInner.style.height = (y + h + 40) + 'px';
+  if (x + w + 40 > curW) canvasInner.style.minWidth = (x + w + 40) + 'px';
+}
+
 async function renderObject(obj) {
   if (store.has(obj.id)) return;
 
@@ -337,27 +425,23 @@ async function renderObject(obj) {
   el.style.top  = obj.y + 'px';
 
   if (obj.type === 'text') {
-    let displayText = obj.content;
+    let display = obj.content;
     if (translateOn) {
       const translated = await clientTranslate(obj.content, obj.sourceLang);
-      if (translated) displayText = translated;
+      if (translated) display = translated;
     }
-    el.textContent = displayText;
-    store.set(obj.id, { obj, el });
-
+    el.textContent = display;
   } else if (obj.type === 'image') {
     const img = document.createElement('img');
     img.src = obj.content; img.draggable = false;
     el.appendChild(img);
-    store.set(obj.id, { obj, el });
-
   } else if (obj.type === 'audio') {
     const audio = document.createElement('audio');
     audio.controls = true; audio.src = obj.content;
     el.appendChild(audio);
-    store.set(obj.id, { obj, el });
   }
 
+  store.set(obj.id, { obj, el });
   canvasInner.appendChild(el);
 }
 
@@ -369,8 +453,7 @@ function startPolling() {
 
 async function fetchObjects() {
   try {
-    // всегда берём оригиналы с сервера, переводим сами на клиенте
-    const objs = await (await fetch('/api/objects?lang=en')).json();
+    const objs = await (await fetch('/api/objects')).json();
     const ids = new Set(objs.map(o => o.id));
     store.forEach((_, id) => {
       if (!ids.has(id)) {
@@ -383,23 +466,20 @@ async function fetchObjects() {
 }
 
 // ── SEND TEXT ─────────────────────────────────────────────────────────────────
-textInput.addEventListener('input', () => {
-  const len = textInput.value.length;
-  charCount.textContent = `${len} / 500`;
-  charCount.classList.toggle('visible', len > 0);
-  charCount.classList.toggle('warn', len > 450);
-});
-
 async function sendText() {
   const text = textInput.value.trim();
   if (!text) return;
   textInput.value = '';
-  charCount.classList.remove('visible');
   try {
     const res = await fetch('/api/post/text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, vw: vw(), vh: vh(), lang: LANG })
+      body: JSON.stringify({
+        text,
+        lang: writeLang,
+        vw: window.innerWidth,
+        vh: window.innerHeight - 80
+      })
     });
     if (!res.ok) return showToast('слишком длинно');
     await renderObject(await res.json());
@@ -434,21 +514,22 @@ document.addEventListener('paste', async e => {
 });
 
 async function uploadFile(file) {
-  if (file.size > 2 * 1024 * 1024) return showToast('файл слишком большой (макс 2mb)');
+  if (file.size > 2 * 1024 * 1024) return showToast('max 2mb');
   const fd = new FormData();
-  fd.append('file', file); fd.append('vw', vw()); fd.append('vh', vh());
+  fd.append('file', file);
+  fd.append('vw', window.innerWidth);
+  fd.append('vh', window.innerHeight - 80);
   try {
     const res = await fetch('/api/post/file', { method: 'POST', body: fd });
-    if (!res.ok) return showToast('неподдерживаемый формат');
+    if (!res.ok) return showToast('unsupported format');
     await renderObject(await res.json());
-  } catch { showToast('ошибка загрузки'); }
+  } catch { showToast('upload error'); }
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 async function apiPost(url, data) {
   const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
   return res.json();
@@ -456,8 +537,7 @@ async function apiPost(url, data) {
 
 let toastTimer;
 function showToast(msg) {
-  toast.textContent = msg;
-  toast.classList.add('show');
+  toast.textContent = msg; toast.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
 }
