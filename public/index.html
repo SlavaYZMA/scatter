@@ -183,7 +183,7 @@
 
 <!-- TRANSLATE TOGGLE -->
 <div id="translate-toggle" title="перевод">
-  <span id="toggle-label">перевод</span>
+  <span id="toggle-label"id="toggle-label">...</span>
   <div class="switch"></div>
 </div>
 
@@ -193,7 +193,7 @@
       <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
     </svg>
   </button>
-  <textarea id="text-input" placeholder="написать что-нибудь..." maxlength="500" rows="2"></textarea>
+  <textarea id="text-input" id="text-placeholder" placeholder="..." maxlength="500" rows="2"></textarea>
   <button id="send-btn">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
@@ -203,15 +203,34 @@
 
 <span id="char-count">0 / 500</span>
 <input type="file" id="file-input" accept="image/*,audio/*">
-<div id="drop-overlay">drop here</div>
+<div id="drop-overlay"id="drop-text">...</div>
 <div id="toast"></div>
 
 <script>
 const LANG        = (navigator.language || 'en').slice(0, 2);
 let authed        = false;
-let translateOn   = false;  // перевод выкл по умолчанию
+let translateOn   = false;
 
-// хранилище объектов: id → { obj, originalText }
+// ── I18N ─────────────────────────────────────────────────────────────────────
+const i18n = {
+  ru: { placeholder: 'написать что-нибудь...', toggle: 'перевод', original: 'оригинал', drop: 'перетащи файл сюда' },
+  en: { placeholder: 'write something...', toggle: 'translate', original: 'original', drop: 'drop file here' },
+  de: { placeholder: 'etwas schreiben...', toggle: 'übersetzen', original: 'original', drop: 'Datei hier ablegen' },
+  fr: { placeholder: 'écrire quelque chose...', toggle: 'traduire', original: 'original', drop: 'déposer ici' },
+  es: { placeholder: 'escribe algo...', toggle: 'traducir', original: 'original', drop: 'soltar archivo aquí' },
+  it: { placeholder: 'scrivi qualcosa...', toggle: 'traduci', original: 'originale', drop: 'trascina qui' },
+  pt: { placeholder: 'escreva algo...', toggle: 'traduzir', original: 'original', drop: 'soltar aqui' },
+  zh: { placeholder: '写点什么...', toggle: '翻译', original: '原文', drop: '拖放文件到这里' },
+  ja: { placeholder: '何か書いてください...', toggle: '翻訳', original: 'オリジナル', drop: 'ファイルをドロップ' },
+  ko: { placeholder: '무언가 써보세요...', toggle: '번역', original: '원본', drop: '파일을 여기에 놓으세요' },
+  ar: { placeholder: 'اكتب شيئاً...', toggle: 'ترجمة', original: 'أصلي', drop: 'أسقط الملف هنا' },
+  tr: { placeholder: 'bir şeyler yaz...', toggle: 'çevir', original: 'orijinal', drop: 'dosyayı buraya bırak' },
+  pl: { placeholder: 'napisz coś...', toggle: 'tłumacz', original: 'oryginał', drop: 'upuść plik tutaj' },
+  nl: { placeholder: 'schrijf iets...', toggle: 'vertalen', original: 'origineel', drop: 'bestand neerzetten' },
+};
+const t = i18n[LANG] || i18n['en'];
+
+// хранилище объектов: id → { obj, el }
 const store = new Map();
 
 const authEl        = document.getElementById('auth');
@@ -227,6 +246,11 @@ const dropOverlay   = document.getElementById('drop-overlay');
 const toast         = document.getElementById('toast');
 const toggleEl      = document.getElementById('translate-toggle');
 const toggleLabel   = document.getElementById('toggle-label');
+
+// применить переводы интерфейса
+textInput.placeholder = t.placeholder;
+document.getElementById('drop-text').textContent = t.drop;
+toggleLabel.textContent = t.toggle;
 
 function vw() { return window.innerWidth; }
 function vh() { return window.innerHeight - 80; }
@@ -267,7 +291,7 @@ async function tryAuth(code) {
 toggleEl.addEventListener('click', async () => {
   translateOn = !translateOn;
   toggleEl.classList.toggle('on', translateOn);
-  toggleLabel.textContent = translateOn ? 'перевод' : 'оригинал';
+  toggleLabel.textContent = translateOn ? t.toggle : t.original;
   await applyTranslationToAll();
 });
 
