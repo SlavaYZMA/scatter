@@ -209,7 +209,7 @@
 <script>
 const LANG        = (navigator.language || 'en').slice(0, 2);
 let authed        = false;
-let translateOn   = false;
+let translateOn   = true;
 
 // ── I18N ─────────────────────────────────────────────────────────────────────
 const i18n = {
@@ -248,6 +248,7 @@ const toggleEl      = document.getElementById('translate-toggle');
 const toggleLabel   = document.getElementById('toggle-label');
 
 // применить переводы интерфейса
+toggleEl.classList.toggle('on', translateOn);
 textInput.placeholder = t.placeholder;
 document.getElementById('drop-text').textContent = t.drop;
 toggleLabel.textContent = t.toggle;
@@ -301,7 +302,7 @@ async function applyTranslationToAll() {
   for (const { obj, el } of entries) {
     const original = obj.content;
     if (translateOn) {
-      const translated = await clientTranslate(original);
+      const translated = await clientTranslate(original, obj.sourceLang);
       el.textContent = translated || original;
     } else {
       el.textContent = original;
